@@ -18,7 +18,7 @@ use csrf_guard::CsrfProtector
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     // initialize the protector in main function:
-    let new_protector = protector::CsrfProtector::init();
+    let new_protector = CsrfProtector::init();
 
     // in actix-web, you'll share the state via "actix_web::app::App::app_data()" function,
     // because of that we used to pass our protector on that:
@@ -97,7 +97,7 @@ pub struct PostInputs {
     pub csrf_token: String
 }
 
-// that structs are optional but 
+// that structs are optional but for the sake of simplicity i created them:
 
 #[derive(Debug, serde::Serialize)]
 pub struct InvalidCsrfResponse {
