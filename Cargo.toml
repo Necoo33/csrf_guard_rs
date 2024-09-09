@@ -1,0 +1,14 @@
+[package]
+name = "csrf_guard"
+version = "0.1.0"
+edition = "2021"
+authors = ["Necdet Arda Etiman <arda_etiman_799@windowslive.com>"]
+description = "Thread safe, generic csrf guard for all frameworks and runtimes"
+repository = "https://github.com/Necoo33/csrf_guard_rs"
+keywords = [ "csrf", "web", "security", "http" ]
+categories = [ "web-programming", "authentication", "cryptography" ]
+readme = "README.md"
+license = "MIT"
+
+[dependencies]
+uuid = { version = "1.10.0", features = ["v4"] }
