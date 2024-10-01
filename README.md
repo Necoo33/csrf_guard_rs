@@ -1,6 +1,6 @@
 # Csrf Guard For All Runtimes And Frameworks
 
-[csrf_guard](https://github.com/Necoo33/csrf_guard_rs) is a Thread safe, generic Csrf guard for all frameworks and runtimes. You can use it everywhere if you can reach guest ip and pass it as a String.
+[csrf_guard](https://github.com/Necoo33/csrf_guard_rs) is a Thread safe, generic Csrf guard for all frameworks and runtimes. You can use it everywhere if you can reach guest ip and pass it as a String. You have two api options here: csrf_guard with expiration mechanism and without expiration. Their use is exactly same, but their constructors different.
 
 ## Sample
 
@@ -18,7 +18,9 @@ use csrf_guard::CsrfProtector
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     // initialize the protector in main function:
-    let new_protector = CsrfProtector::init();
+
+    // this is our new expiration api, all tokens will be assigned with 1 hour timestamp:
+    let new_protector = CsrfProtector::init_with_expiration(3600);
 
     // in actix-web, you'll share the state via "actix_web::app::App::app_data()" function,
     // because of that we used to pass our protector on that:
