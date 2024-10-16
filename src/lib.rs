@@ -127,17 +127,13 @@ impl CsrfProtector {
                         continue;
                     }
 
-                    if let Some(expiration) = csrf.expiration {
-                        if Instant::now() >= expiration {
-                            if csrf.ip != ip {
-                                self.consume_inner(csrf.token.clone());
+                    if csrf.ip == ip {
+                        if Instant::now() >= csrf.expiration.unwrap() {
+                            self.consume_inner(csrf.token.clone());
 
-                                self.add_new_csrf(ip.clone());
-                            } else {
-                                self.consume_inner(csrf.token.clone());
-
-                                current_csrf = Some(self.add_new_csrf(ip.clone()));
-                            }
+                            current_csrf = Some(self.add_new_csrf(ip.clone()));
+                        } else {
+                            return csrf
                         }
                     }
                 } else {

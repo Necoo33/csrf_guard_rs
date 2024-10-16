@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.3.0
+
+A bug fixed on protection mechanism.
+uuid version upgraded to 1.11.0 .
+
 ## v0.2.0
 
 Added expiration mechanism, now you can set when a csrf token will be expire and give an ip to new one. This won't break any of the backward code.

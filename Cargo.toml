@@ -1,6 +1,6 @@
 [package]
 name = "csrf_guard"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2021"
 authors = ["Necdet Arda Etiman <arda_etiman_799@windowslive.com>"]
 description = "Thread safe, generic csrf guard for all frameworks and runtimes"
@@ -11,4 +11,4 @@ readme = "README.md"
 license = "MIT"
 
 [dependencies]
-uuid = { version = "1.10.0", features = ["v4"] }
+uuid = { version = "1.11.0", features = ["v4"] }
