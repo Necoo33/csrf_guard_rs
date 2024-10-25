@@ -16,7 +16,8 @@ impl CsrfProtector {
         let boilerplate_entry = Csrf {
             token: "".to_string(),
             ip: "".to_string(),
-            expiration: None
+            expiration: None,
+            status: TokenStatus::Unchecked
         };
 
         let instance = Self {
@@ -32,7 +33,8 @@ impl CsrfProtector {
         let boilerplate_entry = Csrf {
             token: "".to_string(),
             ip: "".to_string(),
-            expiration: None
+            expiration: None,
+            status: TokenStatus::Unchecked
         };
 
         let instance = Self {
@@ -99,14 +101,36 @@ impl CsrfProtector {
     }
 
     // this function checks if a Csrf instance has given token:
-    pub fn check_if_token_exist(&self, current_token: String) -> bool {
-        for csrf in self.tokens.clone().into_iter() {
-            if csrf.token == current_token {
-                return true;
+    pub fn check_token_status(&mut self, current_token: String) -> TokenStatus {
+        for (i, csrf) in self.tokens.clone().into_iter().enumerate() {
+            if let Some(expiration) = csrf.expiration {
+                if csrf.token == current_token {
+                    let token_status: TokenStatus;
+                    if Instant::now() >= expiration {
+                        self.tokens[i].status = TokenStatus::Expired;
+                        token_status = TokenStatus::Expired;
+                    } else {
+                        self.tokens[i].status = TokenStatus::Exist;
+                        token_status = TokenStatus::Exist;
+                    }
+
+                    return token_status;
+                } else {
+                    if csrf.status != TokenStatus::Expired {
+                        if Instant::now() >= expiration {
+                            self.tokens[i].status = TokenStatus::Expired
+                        }
+                    }
+                }
+            } else {
+                if csrf.token == current_token {
+                    self.tokens[i].status = TokenStatus::Exist;
+                    return TokenStatus::Exist
+                }
             }
         }
 
-        return false;
+        return TokenStatus::NotExist;
     }
 
     // this function performs the check action. If there is no
@@ -117,29 +141,59 @@ impl CsrfProtector {
     // expired returns the initial Csrf instance that has same 
     // ip with given ip:
     fn perform_csrf_action(&mut self, ip: String) -> Csrf {
-        if !self.check_if_ip_exist(ip.clone()) {   
+        if !self.check_if_ip_exist(ip.clone()) { 
+            if self.expiration_time.is_some() {
+                for (i, csrf) in self.tokens.clone().into_iter().enumerate() {
+                    if csrf.token == "" {
+                        continue;
+                    }
+
+                    if let Some(expiration) = csrf.expiration {
+                        if Instant::now() >= expiration {
+                            println!("Yeni ip eklendi ve şu ip'nin expired zamanı geldi: {}", ip);
+                            
+                            self.tokens[i].status = TokenStatus::Expired
+                        }
+                    }
+                }
+            } 
+
             return self.add_new_csrf(ip);
         } else {
             let mut current_csrf: Option<Csrf> = None;
-            for csrf in self.tokens.clone().into_iter() {
+
+            for (i, csrf) in self.tokens.clone().into_iter().enumerate() {
                 if self.expiration_time.is_some() {
                     if csrf.token == "" {
                         continue;
                     }
 
-                    if csrf.ip == ip {
-                        if Instant::now() >= csrf.expiration.unwrap() {
-                            self.consume_inner(csrf.token.clone());
+                    if let Some(expiration) = csrf.expiration {
+                        if csrf.status == TokenStatus::Expired {
+                            if csrf.ip == ip {
+                                self.consume_inner(csrf.token.clone());
+    
+                                current_csrf = Some(self.add_new_csrf(ip.clone()));
+                            }
+                        } else if Instant::now() >= expiration {
+                            if csrf.ip != ip { 
+                                self.tokens[i].status = TokenStatus::Expired
+                            } else {
+                                self.consume_inner(csrf.token.clone());
 
-                            current_csrf = Some(self.add_new_csrf(ip.clone()));
+                                current_csrf = Some(self.add_new_csrf(ip.clone()));
+                            }
                         } else {
-                            return csrf
+                            let token = self.tokens[i].clone();
+                            return token
                         }
                     }
                 } else {
                     if csrf.ip == ip {
-                        return csrf
-                    }
+                        self.tokens[i].status = TokenStatus::Exist;
+                        let token = self.tokens[i].clone();
+                        return token
+                    } 
                 }
             }
 
@@ -151,7 +205,8 @@ impl CsrfProtector {
         Csrf {
             token: "".to_string(),
             ip: "".to_string(),
-            expiration: None
+            expiration: None,
+            status: TokenStatus::Unchecked
         }
     }
 }
@@ -162,7 +217,8 @@ impl CsrfProtector {
 pub struct Csrf {
     pub token: String,
     pub ip: String,
-    pub expiration: Option<Instant>
+    pub expiration: Option<Instant>,
+    pub status: TokenStatus
 }
 
 impl Csrf {
@@ -170,7 +226,8 @@ impl Csrf {
         return Self {
             token: uuid::Uuid::new_v4().to_string(),
             ip,
-            expiration: None
+            expiration: None,
+            status: TokenStatus::Unchecked
         }
     }
 
@@ -178,7 +235,13 @@ impl Csrf {
         return Self {
             token: self.token.clone(),
             ip: self.ip.clone(),
-            expiration: Some(Instant::now() + seconds)
+            expiration: Some(Instant::now() + seconds),
+            status: TokenStatus::Unchecked
         }
     }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum TokenStatus {
+    Unchecked, Exist, NotExist, Expired
 }

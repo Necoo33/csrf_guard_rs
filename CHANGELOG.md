@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.4.0
+
+Added `TokenStatus` enum.
+Added `.status` field to `Csrf` struct which has the type of `TokenStatus`
+`check_if_token_exist()` function replaced by `check_token_status()` function. It returns a variant of `TokenStatus`, which implements `Debug`, `Clone` and `PartialEq` derive macros.
+
 ## v0.3.0
 
 A bug fixed on protection mechanism.
